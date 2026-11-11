@@ -1,0 +1,18 @@
+@use '../abstracts';
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: abstracts.$font-main;
+  color: abstracts.$ink;
+  line-height: 1.6;
+}
+
+h1, h2, h3, p { margin: 0; }
+
+img { max-width: 100%; display: block; }
+
+//setting default styles and spacing for page

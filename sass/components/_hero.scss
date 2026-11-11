@@ -1,0 +1,36 @@
+@use '../abstracts';
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 40px;
+  text-align: center;
+  color: abstracts.$white;
+  background: abstracts.$orange;
+}
+
+.hero-content { max-width: 600px; }
+
+.hero-title {
+  font-size: clamp(4.5rem, 24vw, 9rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.hero-text {
+  margin: 1rem 0 2rem;
+  font-size: 1.05rem;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.8rem 2rem;
+  border-radius: 40px;
+  background: abstracts.$white;
+  color: abstracts.$orange-dark;
+  font-weight: 700;
+  text-decoration: none;
+}
