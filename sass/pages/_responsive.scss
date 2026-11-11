@@ -1,0 +1,53 @@
+@use '../abstracts';
+
+@media (max-width: 767px) {
+  
+  .navigation-toggle { display: block; }
+  .nav--open .navigation-toggle { background-image: url(../images/close.svg);}
+  .navigation-links {
+    position: absolute;
+    top: abstracts.$nav-height;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    max-height: 0;
+    background: abstracts.$orange-dark;
+    transition: max-height 0.35s ease;
+
+    a {
+      display: block;
+      padding: 1rem 1.5rem;
+    }
+  }
+  .nav--open .navigation-links { max-height: 320px; }
+}
+
+@media (min-width: 768px) {
+  .nav { padding: 0 2rem; }
+  .navigation-links {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+
+    a {
+      padding: 0.4rem 0;
+      border-bottom: 2px solid transparent;
+      transition: border-color 0.2s;
+
+      &:hover { border-color: abstracts.$white; }
+    }
+
+    .nav-cta {
+      padding: 0.5rem 1.25rem;
+      border: 0;
+      border-radius: 999px;
+      background: abstracts.$white;
+      color: abstracts.$orange-dark;
+    }
+  }
+
+  .hero-text {font-size: 1.25rem;}
+  .explore {padding: 4rem 2rem; }
+
+  model-viewer {height: 70vh;}
+}
