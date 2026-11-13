@@ -89,6 +89,16 @@ a
                 ?>
             </section>
  
+            <section aria-labelledby="stories">
+                <h3 id="stories">Tell us more</h3>
+                <?php
+                renderTextarea($errors, $old, 'recipe',
+                    'Could you share the recipe for your favourite meal?', 'Ingredients and steps are both welcome.');
+                renderTextarea($errors, $old, 'memory',
+                    'Describe your most memorable meal and why it stuck with you.');
+                ?>
+            </section>
+ 
     
 
             <button type="submit">Submit survey</button>
