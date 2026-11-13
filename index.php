@@ -99,8 +99,14 @@ a
                 ?>
             </section>
  
-    
-
+            <section aria-labelledby="extras">
+                <h3 id="extras">A few extras</h3>
+                <?php
+                renderInput($errors, $old, 'last_pizza', 'When did you last eat pizza?', 'date', ['max' => $today]);
+                renderInput($errors, $old, 'food_colour', 'What colour best matches your favourite food?', 'color', ['default' => '#ff6600']);
+                renderInput($errors, $old, 'recipe_site', 'What is your favourite recipe website?', 'url', ['placeholder' => 'https://example.com']);
+                ?>
+            </section>
             <button type="submit">Submit survey</button>
         </form>
     </main>
