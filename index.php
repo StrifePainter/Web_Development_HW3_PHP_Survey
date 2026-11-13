@@ -77,6 +77,19 @@ a
                 ?>
             </section>
  
+            <section aria-labelledby="favourites">
+                <h3 id="favourites">Pick all that apply</h3>
+                <?php
+                renderChoiceGroup($errors, $old, $options, 'foods',
+                    'Which of the following foods do you enjoy?', 'checkbox');
+                renderChoiceGroup($errors, $old, $options, 'cuisines',
+                    'Which cuisines would you like to try more often?', 'checkbox');
+                renderChoiceGroup($errors, $old, $options, 'drinks',
+                    'Which drinks do you have in a typical week?', 'checkbox');
+                ?>
+            </section>
+ 
+    
 
             <button type="submit">Submit survey</button>
         </form>
