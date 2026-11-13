@@ -2,157 +2,292 @@
 
 declare(strict_types=1);
 
+//Survey processing script. The declare makes PHP check data types, shows errors if the wrong type of data instead of guessing.
+
 session_start();
 
-// special keyword: __DIR__ is the directory of the file we are currently in.
-// __DIR__ = /Applications/MAMP/htdocs/week_nine_inclass/includes/scripts
-// ../ = go up a directory
+// for some reason it crashes if I don't have this repeated; googled solution and it is because it can't be on two separated pages
+// the other possible solution would be to add the third php like in week 9 example with $options = require __DIR__
+$options = [
 
-// include optionally includes the code, does not throw errors (just warnings) if it's not found
-//include __DIR__ . '/../hfsadshhghghghghgelpers.php';
+    'allergies' => [
+        'yes'     => 'Yes',
+        'no'      => 'No',
+        'yes_but' => "Yes, but that won't stop me!",
+    ],
+    'meal' => [
+        'breakfast' => 'Breakfast',
+        'lunch'     => 'Lunch',
+        'dinner'    => 'Dinner',
+        'snacks'    => 'Snacks',
+    ],
+    'cooking' => [
+        'home'    => 'Cooking at home',
+        'out'     => 'Eating out',
+        'takeout' => 'Takeout / delivery',
+        'mix'     => 'A bit of everything',
+    ],
+    'spice' => [
+        'none'   => 'No spice, please',
+        'mild'   => 'Mild',
+        'medium' => 'Medium',
+        'hot'    => 'Hot',
+    ],
+
+    'foods' => [
+        'pizza'   => 'Pizza',
+        'sushi'   => 'Sushi',
+        'tacos'   => 'Tacos',
+        'pasta'   => 'Pasta',
+        'burgers' => 'Burgers',
+        'salad'   => 'Salad',
+    ],
+    'cuisines' => [
+        'italian'  => 'Italian',
+        'mexican'  => 'Mexican',
+        'japanese' => 'Japanese',
+        'indian'   => 'Indian',
+        'chinese'  => 'Chinese',
+        'greek'    => 'Greek',
+    ],
+    'drinks' => [
+        'water'  => 'Water',
+        'juice'  => 'Juice',
+        'coffee' => 'Coffee',
+        'tea'    => 'Tea',
+        'soda'   => 'Soda',
+        'milk'   => 'Milk',
+    ],
+];
 
 
-// require REQUIRES that the file exists and can be imported, blocking your code from running
-// if it cannot find that file / script or if it cannot execute that script.
-//require __DIR__ . '/../helpers.php';
+function readString(array $input, string $key): string // It takes the array input and a string key to look up.
+{  
+    $value = $input[$key] ?? '';
+    return is_string($value) ? trim($value) : ''; //This will then try to get the input key and then breaks down the function safely  to retrieve a value using a fallback, verifying that it is a string, and trims extra whitespace (googled solution how to get rid of white spaces)
+}
 
-// if we 'require' a file multiple times
-// and there is a method or class, etc. defined in that file
-// we will get "cannot redeclare xyz" errors
+function readStringList(array $input, string $key): array // This function will look up a key in an array, verifying it is an array to make sure it's a clean list of the string elements.
+{
+    $value = $input[$key] ?? [];
+    if (!is_array($value)) {
+        return [];
+    }
+    return array_values(array_filter($value, 'is_string'));
+}
 
-// use 'require_once' instead of 'require' to enforce that a file is only imported one time.
-require_once __DIR__ . '/../helpers.php';
-// when in doubt, use require_once
+// these are validators; this specific is for creating minimum and max for typing answers
+function validateTextLength(string $value, int $min, int $max, string $label): ?string
+{
+    $length = mb_strlen($value);
 
-// we only want to accept POST requests to this page; so we should block all request that are not post requests
+    if ($length === 0) { // if statements to showcase message when it reaches these conditions
+        return "{$label} is required.";
+    }
+    if ($length < $min) {
+        return "{$label} is too short (minimum {$min} characters).";
+    }
+    if ($length > $max) {
+        return "{$label} is too long (maximum {$max} characters).";
+    }
 
-$requestType = $_SERVER['REQUEST_METHOD'];
+    return null;
+}
 
-if ($requestType !== 'POST') {
-    http_response_code(500);
+function validateOneOf(string $value, array $allowedOptions, string $label): ?string
+{
+    if ($value === '') { // more if statements. If the value is completely empty, it stops and returns an error message telling the user they must make a selection for that specific label.
+        return "Please choose an answer for {$label}.";
+    }
+    if (!array_key_exists($value, $allowedOptions)) {
+        return "{$label}: that option isn't available.";
+    }
+
+    return null;
+}
+
+function validateAllOf(array $values, array $allowedOptions, string $label, bool $required): ?string
+{
+    if ($required && count($values) === 0) { // If the field is marked as required ($required = true) and the user didn't select anything (count($values) === 0), it will stop and returns an error message.
+        return "Please choose at least one answer for {$label}."; 
+    }
+    if (count($values) > count($allowedOptions)) { // using greater and lesser signs to have a range of submission 
+        return "{$label}: too many answers were submitted.";
+    }
+    foreach ($values as $value) {
+        if (!array_key_exists($value, $allowedOptions)) {
+            return "{$label}: one of the options isn't available.";
+        }
+    }
+
+    return null;
+}
+
+function validatePastDate(string $value, string $label): ?string // had to google how to input a proper date in order to check that a date is real, correctly formatted, and isn't beyond the current date.
+{
+    if ($value === '') {
+        return "{$label} is required.";
+    }
+
+    $date = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+
+    if ($date === false || $date->format('Y-m-d') !== $value) {
+        return "{$label} must be a real date (YYYY-MM-DD).";
+    }
+    if ($date > new DateTimeImmutable('today')) {
+        return "{$label} can't be in the future.";
+    }
+    if ($date < new DateTimeImmutable('1900-01-01')) {
+        return "{$label} is too far in the past.";
+    }
+
+    return null;
+}
+
+function validateHexColour(string $value, string $label): ?string // googled how to have the atypical question. This format lets only # and 6 numbers through.
+{
+    if (!preg_match('/^#[0-9a-fA-F]{6}$/', $value)) {
+        return "{$label} must be a valid colour.";
+    }
+
+    return null;
+}
+
+function validateUrl(string $value, int $max, string $label): ?string // googled how to check for adding a website for atypical question. This gives if statements when a web address is present, not too long, and a real http(s) URL.
+{
+    if ($value === '') {
+        return "{$label} is required.";
+    }
+    if (mb_strlen($value) > $max) {
+        return "{$label} is too long (maximum {$max} characters).";
+    }
+
+    $scheme = strtolower((string) parse_url($value, PHP_URL_SCHEME));
+
+    if (filter_var($value, FILTER_VALIDATE_URL) === false || !in_array($scheme, ['http', 'https'], true)) {
+        return "{$label} must be a valid web address starting with http:// or https://.";
+    }
+
+    return null;
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') { //only want to accept POST requests to this page, so block everything else
+    http_response_code(405); // 405 means that it's not allowed! Short number code
     exit('Must be a POST request!');
 }
 
-$formInput = $_POST;
+// These are the text related questions
+$textFields = [
+    'name' => ['label' => 'Name', 'min' => 2,  'max' => 50],
+    'city' => ['label' => 'City', 'min' => 2,  'max' => 50],
+    'fav_food' => ['label' => 'Favourite food', 'min' => 2,  'max' => 50],
+    'fav_restaurant' => ['label' => 'Favourite restaurant', 'min' => 2,'max' => 60],
+    'fav_snack' => ['label' => 'Go-to snack', 'min' => 2, 'max' => 50],
+    'never_eat' => ['label' => 'Food you would never eat', 'min' => 2, 'max' => 50],
+    'recipe' => ['label' => 'Recipe', 'min' => 10, 'max' => 1000],
+    'memory' => ['label' => 'Memorable meal', 'min' => 10, 'max' => 1000],
+];
 
-// store the submitted ($_POST) data in the session, so we can refer to the last
-// submission on our form page.
-$_SESSION['form_input'] = $formInput;
+$radioFields = [
+    'allergies' => 'Allergies and restrictions',
+    'meal'      => 'Favourite meal',
+    'cooking'   => 'Cooking preference',
+    'spice'     => 'Spice level',
+];
 
-// let's validate
-// name
-// phone_number
-// reason
-// which_cat
-// other_cats
+// Checkbox questions for having at least one picked
+$checkboxFields = [
+    'foods'    => ['label' => 'Foods you enjoy',  'required' => true],
+    'cuisines' => ['label' => 'Cuisines to try',  'required' => true],
+    'drinks'   => ['label' => 'Weekly drinks',    'required' => false],
+];
 
+// $input holds the cleaned answers and thee errors hold one message per field that failed
+$input  = [];
 $errors = [];
 
-if (!array_key_exists('name', $formInput)) {
-    $errors['name'] = 'Name must be filled out!';
-}
-
-$name = $formInput['name'];
-// || = OR
-if (strlen($name) < 3 || strlen($name) > 30) {
-    $errors['name'] = 'Name must be more than 3 characters and less than 30';
-}
-
-if (!array_key_exists('phone_number', $formInput)) {
-    $errors['phone_number'] = 'Phone number must be filled out!';
-}
-$phoneNumber = $formInput['phone_number'];
-
-
-// email validation is a bit different from other types of validation
-
-if (!array_key_exists('email', $formInput)) {
-    $errors['email'] = 'Email is required!';
-}
-
-$email = $formInput['email'];
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)){
-    $errors['email'] = 'Email must be a correct format!';
-}
-
-// try to think about your form validation
-// as if someone is trying to abuse your submit script
-// with bad data. You should guard against
-// using only values that are valid in your form,
-// and throw errors if values passed are invalid
-
-// if our other_cats was required, we could do this:
-//if (!array_key_exists('other_cats', $formInput)) {
-    //$errors['other_cats'] = 'Other cats interest is required!';
-//}
-//
-// otherwise, if our other_cats is optional, we can get the value if it's there,
-// or default to something sensible
-$otherCats = $formInput['other_cats'] ?? [];
-
-if (!is_array($otherCats)) {
-    $errors['other_cats'] = 'Other cats must be an array!';
-}
-
-$validCats = ['bobby', 'sally', 'jimmy'];
-if (count($otherCats) > count($validCats)) {
-    $errors['other_cats'] = 'Other cats is invalid!';
-}
-
-foreach ($otherCats as $cat) {
-    if (!in_array($cat, $validCats)) {
-        $errors['other_cats'] = $cat . ' is not a valid cat!';
+foreach ($textFields as $key => $field) {
+    $input[$key] = readString($_POST, $key);
+    $error = validateTextLength($input[$key], $field['min'], $field['max'], $field['label']);
+    if ($error !== null) {
+        $errors[$key] = $error;
     }
 }
 
-// let say we're now done all of our validation
-// let's communicate this back to the other page using the session
-
-
-// $_SESSION is a special array variable that persists between pages if session_start()
-// is called at the top of the page
-$_SESSION['form_errors'] = $errors;
-
-
-if (count($errors) === 0) {
-    // if there are no errors, let's email the contents of the form.
-    $to      = 'hello@email.com';
-    $subject = 'New Adoption Request';
-    $message = '';
-
-    $message .= '<h1>New Adoption Request</h1>';
-    $message .= '<ul>';
-    $message .= '<li>Name: ' . $name . '</li>';
-    $message .= '<li>Email: ' . $email . '</li>';
-    $message .= '<li>Phone Number: ' . $phoneNumber . '</li>';
-    $message .= '</ul>';
-    $message .= '<p>Other Cats:</p>';
-    $message .= '<ul>';
-
-    foreach ($otherCats as $cat) {
-        $message .= '<li>' . $cat . '</li>';
+foreach ($radioFields as $key => $label) {
+    $input[$key] = readString($_POST, $key);
+    $error = validateOneOf($input[$key], $options[$key], $label);
+    if ($error !== null) {
+        $errors[$key] = $error;
     }
-    $message .= '</ul>';
-
-    // on local setups (MAMP/WAMP, etc.) mail() typically does NOT actually
-    // send email; because this requires a local mail server to be set up.
-    // WAMP / MAMP DO NOT include a local mail server;
-    // and setting one up is outside the scope of this class.
-    //
-    // Hosting servers will typically include a mail server, allowing this method to work!
-    mail($to, $subject, $message);
 }
 
-// header() sets a header in the response
-// the "Location:" header causes the browser to redirect
-header('Location: /week_nine_inclass/adopt-form.php');
+foreach ($checkboxFields as $key => $field) {
+    $input[$key] = readStringList($_POST, $key);
+    $error = validateAllOf($input[$key], $options[$key], $field['label'], $field['required']);
+    if ($error !== null) {
+        $errors[$key] = $error;
+    }
+}
 
-//prettyDump($formInput);
+// the 3 atypical fields, this is where it becomes validated to its retrospective question
+$input['last_new_food'] = readString($_POST, 'last_new_food');
+if (($error = validatePastDate($input['last_new_food'], 'Last new food date')) !== null) {
+    $errors['last_new_food'] = $error;
+}
 
+$input['food_colour'] = readString($_POST, 'food_colour');
+if (($error = validateHexColour($input['food_colour'], 'Food colour')) !== null) {
+    $errors['food_colour'] = $error;
+}
 
-// Typically, when writing code in any programming language,
-// I like to try and stick to the "four line function" """rule"""
-//
-// Which means - most functionality can be described in a function that is four lines or less.
-// If your code is growing beyond four lines, you should often separate 
-// out pieces of it into smaller functions
+$input['recipe_site'] = readString($_POST, 'recipe_site');
+if (($error = validateUrl($input['recipe_site'], 200, 'Recipe website')) !== null) {
+    $errors['recipe_site'] = $error;
+}
+
+if (count($errors) > 0) {
+    // $_SESSION persists between pages, so index.php can read these.
+    $_SESSION['form_errors']  = $errors;
+    $_SESSION['form_input']   = $input;
+    $_SESSION['form_success'] = false;
+    header('Location: ../../index.php'); // googled this; The header('Location: ../../index.php') line sends the browser back to the form page after the script finishes checking the answers, and exit; stops the script from running any further
+    exit;
+}
+
+$to      = 'hello@email.com'; // this is for sending the email that gets sent when the survey is good
+$subject = 'New Food Survey Submission';
+$message = "New survey submission\n\n";
+
+foreach ($textFields as $key => $field) {
+    $message .= $field['label'] . ': ' . $input[$key] . "\n";
+}
+
+foreach ($radioFields as $key => $label) {
+    $message .= $label . ': ' . $options[$key][$input[$key]] . "\n";
+}
+
+foreach ($checkboxFields as $key => $field) {
+    $chosen = array_map(fn(string $value): string => $options[$key][$value], $input[$key]);
+    $message .= $field['label'] . ': ' . (count($chosen) > 0 ? implode(', ', $chosen) : 'None') . "\n";
+}
+
+$message .= 'Last new food date: ' . $input['last_new_food'] . "\n";
+$message .= 'Food colour: ' . $input['food_colour'] . "\n";
+$message .= 'Recipe website: ' . $input['recipe_site'] . "\n";
+
+// This will log it instead of showing them an error
+$mailSent = mail($to, $subject, $message, 'Content-Type: text/plain; charset=UTF-8');
+
+if (!$mailSent) {
+    error_log('Survey email could not be sent (expected on a local setup).');
+}
+
+// clearing the old answers so the form comes back empty and when it's a success
+$_SESSION['form_errors']  = [];
+$_SESSION['form_input']   = [];
+$_SESSION['form_success'] = true;
+
+header('Location: ../../index.php');
+exit;
