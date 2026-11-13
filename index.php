@@ -298,23 +298,23 @@ $_SESSION['form_success'] = false;
                 <h3 id="extras">A few extras</h3>
 
                 <div class="field">
-                    <label for="last_pizza">When did you last eat pizza?</label>
+                    <label for="last_new_food">When did you last try a new food?</label>
                     <!-- type="date" shows a calendar picker. max = today's date so the picker greys out the
-                         future, but that's only a browser hint (someone could still send a future date
-                         by tampering with the form), so the PHP validator also has to reject it -->
-                    <input type="date" id="last_pizza" name="last_pizza"
+                        future, but that's only a browser hint (someone could still send a future date
+                        by tampering with the form), so the PHP validator also has to reject it -->
+                    <input type="date" id="last_new_food" name="last_new_food"
                         max="<?= date('Y-m-d') ?>"
-                        value="<?= htmlspecialchars($old['last_pizza'] ?? '') ?>"
-                        <?php if (isset($errors['last_pizza'])): ?>aria-invalid="true" aria-describedby="last_pizza-error"<?php endif; ?>>
-                    <?php if (isset($errors['last_pizza'])): ?>
-                        <p class="error" id="last_pizza-error"><?= htmlspecialchars($errors['last_pizza']) ?></p>
+                        value="<?= htmlspecialchars($old['last_new_food'] ?? '') ?>"
+                        <?php if (isset($errors['last_new_food'])): ?>aria-invalid="true" aria-describedby="last_new_food-error"<?php endif; ?>>
+                    <?php if (isset($errors['last_new_food'])): ?>
+                        <p class="error" id="last_new_food-error"><?= htmlspecialchars($errors['last_new_food']) ?></p>
                     <?php endif; ?>
                 </div>
 
                 <div class="field">
                     <label for="food_colour">What colour best matches your favourite food?</label>
                     <!-- type="color" shows a colour picker. It always has a colour, so if there's no old
-                         answer we start it at orange -->
+                         answer we start it at orange. Googled how to input with colour and these examples -->
                     <input type="color" id="food_colour" name="food_colour"
                         value="<?= htmlspecialchars($old['food_colour'] ?? '#ff6600') ?>"
                         <?php if (isset($errors['food_colour'])): ?>aria-invalid="true" aria-describedby="food_colour-error"<?php endif; ?>>
