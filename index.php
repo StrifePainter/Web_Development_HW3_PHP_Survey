@@ -62,7 +62,22 @@ $_SESSION['form_success'] = false;
                 renderInput($errors, $old, 'never_eat', 'What food would you never eat?');
                 ?>
             </section>
+a
+            <section aria-labelledby="preferences">
+                <h3 id="preferences">Your preferences</h3>
+                <?php
+                renderChoiceGroup($errors, $old, $options, 'allergies',
+                    'Do you have any allergies or food restrictions that prevent you from eating certain foods?', 'radio');
+                renderChoiceGroup($errors, $old, $options, 'meal',
+                    'Which meal is your favourite?', 'radio');
+                renderChoiceGroup($errors, $old, $options, 'cooking',
+                    'Do you prefer cooking at home or eating out?', 'radio');
+                renderChoiceGroup($errors, $old, $options, 'spice',
+                    'How spicy do you like your food?', 'radio');
+                ?>
+            </section>
  
+
             <button type="submit">Submit survey</button>
         </form>
     </main>
