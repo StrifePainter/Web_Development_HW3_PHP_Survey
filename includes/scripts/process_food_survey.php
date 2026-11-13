@@ -196,7 +196,7 @@ $radioFields = [
     'spice'     => 'Spice level',
 ];
 
-// Checkbox questions for having at least one picked
+// Checkbox questions for having at least one picked. First are the keys which aree the identifiers, and then the labels are what the viewers see. Then it has to select one of the options which are required or optional which falls under false
 $checkboxFields = [
     'foods'    => ['label' => 'Foods you enjoy',  'required' => true],
     'cuisines' => ['label' => 'Cuisines to try',  'required' => true],
@@ -232,9 +232,9 @@ foreach ($checkboxFields as $key => $field) {
 }
 
 // the 3 atypical fields, this is where it becomes validated to its retrospective question
-$input['last_new_food'] = readString($_POST, 'last_new_food');
+$input['last_new_food'] = readString($_POST, 'last_new_food'); // calling for a valid function
 if (($error = validatePastDate($input['last_new_food'], 'Last new food date')) !== null) {
-    $errors['last_new_food'] = $error;
+    $errors['last_new_food'] = $error; // If an error message is returned, it gets saved into an $errors array under the key 'last_new_food' in this example
 }
 
 $input['food_colour'] = readString($_POST, 'food_colour');
