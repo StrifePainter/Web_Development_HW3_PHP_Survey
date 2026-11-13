@@ -9,10 +9,24 @@ session_start();
     <link rel="stylesheet" type="text/css" href="main.css">
     <title>PHP Survey</title>
 </head>
+<body>
     <header>
         <h1>Survey on Food</h1>
     </header>
-<body>
-    
+
+    <main>
+        <h2>How much do you like food?</h2>
+    <form method="post" action="" novalidate>
+      <div class="field">
+        <label for="name">What is your name?</label>
+        <input type="text" id="name" name="name"
+               value="<?= htmlspecialchars($old['name'] ?? '') ?>"
+               aria-describedby="name-error"
+               <?= isset($errors['name']) ? 'aria-invalid="true"' : '' ?>>
+        <?php if (isset($errors['name'])): ?>
+          <p class="error" id="name-error" role="alert"><?= $errors['name'] ?></p>
+        <?php endif; ?>
+      </div>
+    </main>
 </body>
 </html>
